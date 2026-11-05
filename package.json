@@ -4,6 +4,14 @@
     "description": "Syntax highlighting for joy templates (joytpl)",
     "version": "1.0.0",
     "publisher": "homobel",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/homobel/vscode-joy"
+    },
+    "bugs": {
+        "url": "https://github.com/homobel/vscode-joy/issues"
+    },
+    "icon": "icon.png",
     "license": "MIT",
     "engines": {
         "vscode": "^1.75.0"
