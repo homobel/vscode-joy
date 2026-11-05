@@ -1,0 +1,53 @@
+{
+    "name": "joy",
+    "displayName": "Joy Templates",
+    "description": "Syntax highlighting for joy templates (joytpl)",
+    "version": "1.0.0",
+    "publisher": "homobel",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "joy",
+        "joytpl",
+        "template",
+        "html"
+    ],
+    "scripts": {
+        "test": "node test/run.js"
+    },
+    "devDependencies": {
+        "vscode-oniguruma": "^1.7.0",
+        "vscode-textmate": "^9.0.0"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "id": "joy",
+                "aliases": [
+                    "Joy",
+                    "joy"
+                ],
+                "extensions": [
+                    ".joy"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "joy",
+                "scopeName": "text.html.joy",
+                "path": "./syntaxes/joy.tmLanguage.json",
+                "embeddedLanguages": {
+                    "source.js": "javascript",
+                    "source.css": "css"
+                }
+            }
+        ]
+    }
+}

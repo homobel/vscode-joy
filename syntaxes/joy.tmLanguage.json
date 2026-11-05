@@ -1,0 +1,462 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Joy",
+    "scopeName": "text.html.joy",
+    "comment": "Joy templates: html with @-prefixed template syntax. Html content and joy blocks are handled by the patterns below, joy inside tags, attribute values and embedded js/css/json is added via injections.",
+    "patterns": [
+        { "include": "#joy" },
+        { "include": "text.html.basic" }
+    ],
+    "injections": {
+        "L:text.html.joy meta.tag - (source | string | comment.block.joy)": {
+            "comment": "between tag attributes, e.g. <input @if a {disabled}>",
+            "patterns": [{ "include": "#joy-tag" }]
+        },
+        "L:text.html.joy meta.attribute string - (source | comment.block.joy | string.quoted.single.joy | string.quoted.double.joy)": {
+            "comment": "inside attribute values, e.g. class=\"a @if b {c}\"",
+            "patterns": [{ "include": "#joy-string" }]
+        },
+        "L:text.html.joy meta.element - (meta.tag | meta.attribute | source | string | comment)": {
+            "comment": "content of svg and math elements, which html scopes as nested elements",
+            "patterns": [{ "include": "#joy" }]
+        },
+        "L:text.html.joy source - (comment.block.joy | string.quoted.single.joy | string.quoted.double.joy)": {
+            "comment": "embedded js, css and json, blocks aren't supported there, so only inline constructs are highlighted",
+            "patterns": [{ "include": "#joy-inline" }]
+        },
+        "L:text.html.joy comment.block.html - comment.block.joy": {
+            "patterns": [{ "include": "#joy-inline" }]
+        }
+    },
+    "repository": {
+        "joy": {
+            "patterns": [
+                { "include": "#escape" },
+                { "include": "#comment" },
+                { "include": "#import" },
+                { "include": "#condition" },
+                { "include": "#else" },
+                { "include": "#loop" },
+                { "include": "#function" },
+                { "include": "#variable" }
+            ]
+        },
+        "joy-tag": {
+            "patterns": [
+                { "include": "#escape" },
+                { "include": "#comment" },
+                { "include": "#tag-condition" },
+                { "include": "#tag-else" },
+                { "include": "#tag-loop" },
+                { "include": "#tag-function" },
+                { "include": "#variable" }
+            ]
+        },
+        "joy-string": {
+            "patterns": [
+                { "include": "#escape" },
+                { "include": "#comment" },
+                { "include": "#string-condition" },
+                { "include": "#string-else" },
+                { "include": "#string-loop" },
+                { "include": "#string-function" },
+                { "include": "#variable" }
+            ]
+        },
+        "joy-inline": {
+            "patterns": [
+                { "include": "#escape" },
+                { "include": "#comment" },
+                { "include": "#import" },
+                {
+                    "match": "@if\\b",
+                    "name": "keyword.control.conditional.joy"
+                },
+                {
+                    "match": "@each\\b",
+                    "name": "keyword.control.loop.joy"
+                },
+                { "include": "#inline-function" },
+                { "include": "#variable" }
+            ]
+        },
+
+        "escape": {
+            "match": "@@",
+            "name": "constant.character.escape.joy"
+        },
+
+        "comment": {
+            "begin": "@\\*",
+            "beginCaptures": { "0": { "name": "punctuation.definition.comment.begin.joy" } },
+            "end": "\\*@",
+            "endCaptures": { "0": { "name": "punctuation.definition.comment.end.joy" } },
+            "name": "comment.block.joy"
+        },
+
+        "import": {
+            "begin": "@import\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.import.joy" } },
+            "comment": "ends after the module path, or at the end of line if it's missing",
+            "end": "(?<=[\"'])|$",
+            "patterns": [
+                {
+                    "match": "\\*",
+                    "name": "variable.other.joy"
+                },
+                {
+                    "match": "[{\\[]",
+                    "name": "punctuation.section.braces.begin.joy"
+                },
+                {
+                    "match": "[}\\]]",
+                    "name": "punctuation.section.braces.end.joy"
+                },
+                {
+                    "match": ",",
+                    "name": "punctuation.separator.joy"
+                },
+                {
+                    "match": "\\b(?:as|from)\\b",
+                    "name": "keyword.operator.joy"
+                },
+                { "include": "#string" },
+                { "include": "#identifier" }
+            ]
+        },
+
+        "variable": {
+            "patterns": [
+                {
+                    "match": "(@)(!)?(\\()[A-Za-z_$][A-Za-z_$0-9.]*(\\))",
+                    "name": "variable.other.joy",
+                    "captures": {
+                        "1": { "name": "punctuation.definition.variable.joy" },
+                        "2": { "name": "keyword.other.joy" },
+                        "3": { "name": "punctuation.section.parens.begin.joy" },
+                        "4": { "name": "punctuation.section.parens.end.joy" }
+                    }
+                },
+                {
+                    "match": "(@)(!)?[A-Za-z_$][A-Za-z_$0-9.]*",
+                    "name": "variable.other.joy",
+                    "captures": {
+                        "1": { "name": "punctuation.definition.variable.joy" },
+                        "2": { "name": "keyword.other.joy" }
+                    }
+                }
+            ]
+        },
+
+        "condition": {
+            "begin": "@if\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.conditional.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#html-block" },
+                { "include": "#expression" }
+            ]
+        },
+        "tag-condition": {
+            "begin": "@if\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.conditional.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#tag-block" },
+                { "include": "#expression" }
+            ]
+        },
+        "string-condition": {
+            "begin": "@if\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.conditional.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#string-block" },
+                { "include": "#expression" }
+            ]
+        },
+
+        "else": {
+            "comment": "textmate can't look ahead to the next line, so else is recognized right after } or at the start of a line",
+            "begin": "(?:^|(?<=\\}))\\s*(else\\s+if\\b|else\\b(?=\\s*\\{))",
+            "beginCaptures": { "1": { "name": "keyword.control.conditional.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#html-block" },
+                { "include": "#expression" }
+            ]
+        },
+        "tag-else": {
+            "begin": "(?:^|(?<=\\}))\\s*(else\\s+if\\b|else\\b(?=\\s*\\{))",
+            "beginCaptures": { "1": { "name": "keyword.control.conditional.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#tag-block" },
+                { "include": "#expression" }
+            ]
+        },
+        "string-else": {
+            "begin": "(?:^|(?<=\\}))\\s*(else\\s+if\\b|else\\b(?=\\s*\\{))",
+            "beginCaptures": { "1": { "name": "keyword.control.conditional.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#string-block" },
+                { "include": "#expression" }
+            ]
+        },
+
+        "loop": {
+            "begin": "@each\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.loop.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#html-block" },
+                { "include": "#loop-expression" }
+            ]
+        },
+        "tag-loop": {
+            "begin": "@each\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.loop.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#tag-block" },
+                { "include": "#loop-expression" }
+            ]
+        },
+        "string-loop": {
+            "begin": "@each\\b",
+            "beginCaptures": { "0": { "name": "keyword.control.loop.joy" } },
+            "end": "(?<=\\})",
+            "patterns": [
+                { "include": "#string-block" },
+                { "include": "#loop-expression" }
+            ]
+        },
+        "loop-expression": {
+            "patterns": [
+                {
+                    "match": ":",
+                    "name": "punctuation.separator.joy"
+                },
+                {
+                    "match": "\\bin\\b",
+                    "name": "keyword.operator.joy"
+                },
+                { "include": "#identifier" }
+            ]
+        },
+
+        "function": {
+            "comment": "a block may follow the arguments, also on the next line",
+            "begin": "(@)(!)?[A-Za-z_$][A-Za-z_$0-9.]*\\s*(?=\\()",
+            "beginCaptures": {
+                "0": { "name": "variable.function.joy" },
+                "1": { "name": "punctuation.definition.variable.joy" },
+                "2": { "name": "keyword.other.joy" }
+            },
+            "end": "(?<=\\))(?!\\s*(?:\\{|$))|(?<=\\})|^(?!\\s*\\{)",
+            "patterns": [
+                { "include": "#arguments" },
+                { "include": "#html-block" }
+            ]
+        },
+        "tag-function": {
+            "begin": "(@)(!)?[A-Za-z_$][A-Za-z_$0-9.]*\\s*(?=\\()",
+            "beginCaptures": {
+                "0": { "name": "variable.function.joy" },
+                "1": { "name": "punctuation.definition.variable.joy" },
+                "2": { "name": "keyword.other.joy" }
+            },
+            "end": "(?<=\\))(?!\\s*(?:\\{|$))|(?<=\\})|^(?!\\s*\\{)",
+            "patterns": [
+                { "include": "#arguments" },
+                { "include": "#tag-block" }
+            ]
+        },
+        "string-function": {
+            "begin": "(@)(!)?[A-Za-z_$][A-Za-z_$0-9.]*\\s*(?=\\()",
+            "beginCaptures": {
+                "0": { "name": "variable.function.joy" },
+                "1": { "name": "punctuation.definition.variable.joy" },
+                "2": { "name": "keyword.other.joy" }
+            },
+            "end": "(?<=\\))(?!\\s*(?:\\{|$))|(?<=\\})|^(?!\\s*\\{)",
+            "patterns": [
+                { "include": "#arguments" },
+                { "include": "#string-block" }
+            ]
+        },
+        "inline-function": {
+            "begin": "(@)(!)?[A-Za-z_$][A-Za-z_$0-9.]*\\s*(?=\\()",
+            "beginCaptures": {
+                "0": { "name": "variable.function.joy" },
+                "1": { "name": "punctuation.definition.variable.joy" },
+                "2": { "name": "keyword.other.joy" }
+            },
+            "end": "(?<=\\))",
+            "patterns": [
+                { "include": "#arguments" }
+            ]
+        },
+
+        "arguments": {
+            "begin": "\\(",
+            "beginCaptures": { "0": { "name": "punctuation.section.parameters.begin.joy" } },
+            "end": "\\)",
+            "endCaptures": { "0": { "name": "punctuation.section.parameters.end.joy" } },
+            "name": "meta.function-call.parameters.joy",
+            "patterns": [
+                {
+                    "match": ",",
+                    "name": "punctuation.separator.parameters.joy"
+                },
+                {
+                    "comment": "nested call, e.g. fn(a, other(b) { ... })",
+                    "begin": "[A-Za-z_$][A-Za-z_$0-9.]*\\s*(?=\\()",
+                    "beginCaptures": { "0": { "name": "variable.function.joy" } },
+                    "end": "(?<=\\))",
+                    "patterns": [
+                        { "include": "#arguments" }
+                    ]
+                },
+                { "include": "#html-block" },
+                { "include": "#operator" },
+                {
+                    "match": "=",
+                    "name": "keyword.operator.assignment.joy"
+                },
+                { "include": "#expression" }
+            ]
+        },
+
+        "expression": {
+            "patterns": [
+                {
+                    "begin": "\\(",
+                    "beginCaptures": { "0": { "name": "punctuation.section.group.begin.joy" } },
+                    "end": "\\)",
+                    "endCaptures": { "0": { "name": "punctuation.section.group.end.joy" } },
+                    "patterns": [
+                        { "include": "#expression" }
+                    ]
+                },
+                { "include": "#string" },
+                {
+                    "match": "\\b(?:undefined|null|true|false)\\b",
+                    "name": "constant.language.joy"
+                },
+                {
+                    "match": "\\b[0-9]+(?:\\.[0-9]+)?\\b",
+                    "name": "constant.numeric.joy"
+                },
+                { "include": "#operator" },
+                { "include": "#identifier" }
+            ]
+        },
+
+        "operator": {
+            "patterns": [
+                {
+                    "match": "!==|!=|===|==|>=|<=|&&|\\|\\||!|>|<",
+                    "name": "keyword.operator.logical.joy"
+                },
+                {
+                    "match": "[-+*/%]",
+                    "name": "keyword.operator.arithmetic.joy"
+                }
+            ]
+        },
+
+        "identifier": {
+            "match": "[A-Za-z_$][A-Za-z_$0-9.]*",
+            "name": "variable.other.joy"
+        },
+
+        "string": {
+            "patterns": [
+                {
+                    "begin": "\"",
+                    "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.joy" } },
+                    "end": "\"",
+                    "endCaptures": { "0": { "name": "punctuation.definition.string.end.joy" } },
+                    "name": "string.quoted.double.joy",
+                    "patterns": [{ "include": "#string-escape" }]
+                },
+                {
+                    "begin": "'",
+                    "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.joy" } },
+                    "end": "'",
+                    "endCaptures": { "0": { "name": "punctuation.definition.string.end.joy" } },
+                    "name": "string.quoted.single.joy",
+                    "patterns": [{ "include": "#string-escape" }]
+                }
+            ]
+        },
+        "string-escape": {
+            "match": "\\\\.",
+            "name": "constant.character.escape.joy"
+        },
+
+        "html-block": {
+            "comment": "html content in braces",
+            "begin": "\\{",
+            "beginCaptures": { "0": { "name": "punctuation.section.block.begin.joy" } },
+            "end": "\\}",
+            "endCaptures": { "0": { "name": "punctuation.section.block.end.joy" } },
+            "patterns": [{ "include": "#html-block-content" }]
+        },
+        "html-block-content": {
+            "patterns": [
+                { "include": "#block-escape" },
+                { "include": "#joy" },
+                {
+                    "comment": "plain braces in html text must be balanced",
+                    "begin": "\\{",
+                    "end": "\\}",
+                    "patterns": [{ "include": "#html-block-content" }]
+                },
+                { "include": "text.html.basic" }
+            ]
+        },
+
+        "tag-block": {
+            "comment": "tag attributes in braces, e.g. <input @if a {disabled}>",
+            "begin": "\\{",
+            "beginCaptures": { "0": { "name": "punctuation.section.block.begin.joy" } },
+            "end": "\\}",
+            "endCaptures": { "0": { "name": "punctuation.section.block.end.joy" } },
+            "patterns": [
+                {
+                    "comment": "html would take the brace as part of an unknown attribute name",
+                    "match": "[^\\s\"'<>/={}]+(?=\\})",
+                    "name": "entity.other.attribute-name.html"
+                },
+                { "include": "text.html.basic#attribute" }
+            ]
+        },
+
+        "string-block": {
+            "comment": "attribute value text in braces, e.g. class=\"a @if b {c}\"",
+            "begin": "\\{",
+            "beginCaptures": { "0": { "name": "punctuation.section.block.begin.joy" } },
+            "end": "\\}",
+            "endCaptures": { "0": { "name": "punctuation.section.block.end.joy" } },
+            "patterns": [{ "include": "#string-block-content" }]
+        },
+        "string-block-content": {
+            "patterns": [
+                { "include": "#block-escape" },
+                {
+                    "begin": "\\{",
+                    "end": "\\}",
+                    "patterns": [{ "include": "#string-block-content" }]
+                }
+            ]
+        },
+
+        "block-escape": {
+            "match": "\\\\[{}]",
+            "name": "constant.character.escape.joy"
+        }
+    }
+}

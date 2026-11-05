@@ -1,0 +1,225 @@
+<!-- joy grammar tests, run with: npm test -->
+
+<p>text @* comment *@ text</p>
+<!--    ^^^^^^^^^^^^ comment.block.joy -->
+<!--                 ^^^^ text.html.joy - comment -->
+
+@@escaped @* -> @escaped *@
+<!-- <- constant.character.escape.joy -->
+<!--^^^^^^ - variable -->
+
+@import * as foo from "bar/foo"
+<!-- <- keyword.control.import.joy -->
+<!--    ^ variable.other.joy -->
+<!--      ^^ keyword.operator.joy -->
+<!--         ^^^ variable.other.joy -->
+<!--             ^^^^ keyword.operator.joy -->
+<!--                  ^^^^^^^^^ string.quoted.double.joy -->
+<p>after import</p>
+<!-- <- meta.tag punctuation.definition.tag.begin.html -->
+
+@import { export1 , export2 as alias2 } from "module-name"
+<!--    ^ punctuation.section.braces.begin.joy -->
+<!--                                  ^ punctuation.section.braces.end.joy -->
+
+@htmlEscaped @!htmlRaw @foo.boo.bar @(hello)world
+<!-- <- variable.other.joy -->
+<!--          ^ keyword.other.joy -->
+<!--          ^^^^^^^^ variable.other.joy -->
+<!--                   ^^^^^^^^^^^^ variable.other.joy -->
+<!--                                 ^ punctuation.section.parens.begin.joy -->
+<!--                                  ^^^^^ variable.other.joy -->
+<!--                                       ^ punctuation.section.parens.end.joy -->
+<!--                                        ^^^^^ - variable -->
+
+<a href="@url" class="x @cls">link</a>
+<!--     ^^^^ variable.other.joy -->
+<!--                    ^^^^ variable.other.joy -->
+
+@foo.fn(100, 'foo', name='foo', gag(false, 2312) {
+<!-- <- variable.function.joy -->
+<!--   ^ punctuation.section.parameters.begin.joy -->
+<!--    ^^^ constant.numeric.joy -->
+<!--         ^^^^^ string.quoted.single.joy -->
+<!--                    ^ keyword.operator.assignment.joy -->
+<!--                            ^^^ variable.function.joy -->
+<!--                                ^^^^^ constant.language.joy -->
+<!--                                             ^ punctuation.section.block.begin.joy -->
+    <span>@lol</span>
+<!--^^^^^^ meta.tag -->
+<!--      ^^^^ variable.other.joy -->
+}) after
+<!-- <- punctuation.section.block.end.joy -->
+<!--^^^^^^ - meta.function-call -->
+
+@!foo.fn('foo') {
+<!-- <- variable.function.joy -->
+<!--^^^^ variable.function.joy -->
+<!--            ^ punctuation.section.block.begin.joy -->
+    \} escape \{
+<!--^^ constant.character.escape.joy -->
+    Hello {world} @name!
+<!--              ^^^^^ variable.other.joy -->
+    <script type="application/json">
+        { "data": true }
+<!--    ^ source.unknown -->
+<!--                   ^ source.unknown -->
+    </script>
+}
+<!-- <- punctuation.section.block.end.joy -->
+<p>outside</p>
+<!-- <- meta.tag -->
+
+@if (a < 1 || (b === 2) > 0) && c == 'foo' {
+<!-- <- keyword.control.conditional.joy -->
+<!--^ punctuation.section.group.begin.joy -->
+<!--   ^ keyword.operator.logical.joy -->
+<!--       ^^ keyword.operator.logical.joy -->
+<!--                         ^^ keyword.operator.logical.joy -->
+<!--                                       ^ punctuation.section.block.begin.joy -->
+    <span>text</span>
+} else if a == 1 {
+<!-- <- punctuation.section.block.end.joy -->
+<!--^^^^ keyword.control.conditional.joy -->
+<!--   ^^ keyword.control.conditional.joy -->
+}
+else {
+<!-- <- keyword.control.conditional.joy -->
+<!-- ^ punctuation.section.block.begin.joy -->
+    @if item === 'foo' {
+<!--^^^ keyword.control.conditional.joy -->
+    }
+}
+<!-- <- punctuation.section.block.end.joy -->
+else
+<!-- <- - keyword -->
+
+@each key:value in items2 {
+<!-- <- keyword.control.loop.joy -->
+<!--  ^^^ variable.other.joy -->
+<!--     ^ punctuation.separator.joy -->
+<!--            ^^ keyword.operator.joy -->
+<!--                      ^ punctuation.section.block.begin.joy -->
+    @key
+<!--^^^^ variable.other.joy -->
+}
+<!-- <- punctuation.section.block.end.joy -->
+<p>end</p>
+<!-- <- meta.tag -->
+
+<style>
+@media screen { .a { color: @color; } }
+<!-- <- variable.other.joy -->
+<!--                        ^^^^^^ source.css variable.other.joy -->
+@@media screen { .a { content: "@name"; } }
+<!-- <- constant.character.escape.joy -->
+<!--^^^^ - variable -->
+<!--                            ^^^^^ variable.other.joy -->
+<!--                                 ^ string.quoted.double.css -->
+@* comment *@ .b { margin: @!(gap)px; }
+<!-- <- comment.block.joy -->
+<!--                       ^^^^^^^ variable.other.joy -->
+</style>
+<!-- <- meta.tag.metadata.style.end.html -->
+
+<script>
+    var data = @!data, url = '@root/api';
+<!--           ^^^^^^ source.js variable.other.joy -->
+<!--                          ^^^^^ variable.other.joy -->
+    @if cond { run(@foo.fn(1, 'x')); } @* note *@
+<!--^^^ keyword.control.conditional.joy -->
+<!--               ^^^^^^^ variable.function.joy -->
+<!--                      ^^^^^^^^ meta.function-call.parameters.joy -->
+<!--                                   ^^^^^^^^^^ comment.block.joy -->
+    @@decorator
+<!--^^ constant.character.escape.joy -->
+</script>
+<!-- <- meta.tag.metadata.script.end.html -->
+
+<script>@first</script><style>@second</style>
+<!--    ^^^^^^ source.js variable.other.joy -->
+<!--                          ^^^^^^^ source.css variable.other.joy -->
+
+<script>@first</script><style>@second</style>
+<!--    ^^^^^^ source.js variable.other.joy -->
+<!--                          ^^^^^^^ source.css variable.other.joy -->
+
+<script type="application/json">
+    { "id": @id, "name": "@name" }
+<!--        ^^^ source.unknown variable.other.joy -->
+<!--                      ^^^^^ variable.other.joy -->
+</script>
+
+<button onclick="go(@id)" style="color: @color">x</button>
+<!--                ^^^ source.js variable.other.joy -->
+<!--                                    ^^^^^^ source.css variable.other.joy -->
+<!--                                          ^ punctuation.definition.string.end.html -->
+<p>end</p>
+<!-- <- meta.tag - source -->
+
+<input name="@n" @data.required @if a {autofocus} @if b {class="@c"} else {disabled} />
+<!--             ^^^^^^^^^^^^^^ variable.other.joy -->
+<!--                            ^^^ keyword.control.conditional.joy -->
+<!--                                  ^ punctuation.section.block.begin.joy -->
+<!--                                   ^^^^^^^^^ entity.other.attribute-name.html -->
+<!--                                            ^ punctuation.section.block.end.joy -->
+<!--                                                            ^^ variable.other.joy -->
+<!--                                                               ^ punctuation.section.block.end.joy -->
+<!--                                                                 ^^^^ keyword.control.conditional.joy -->
+<!--                                                                       ^^^^^^^^ entity.other.attribute-name.html -->
+<!--                                                                               ^ punctuation.section.block.end.joy -->
+<!--                                                                                 ^^ punctuation.definition.tag.end.html -->
+<div class="tab @if data.current {current {x}} else {other}" title="@l10n('Close', a)">x</div>
+<!--            ^^^ keyword.control.conditional.joy -->
+<!--                             ^ punctuation.section.block.begin.joy -->
+<!--                              ^^^^^^^ string.quoted.double.html - punctuation -->
+<!--                                        ^ string.quoted.double.html - punctuation.section.block -->
+<!--                                         ^ punctuation.section.block.end.joy -->
+<!--                                           ^^^^ keyword.control.conditional.joy -->
+<!--                                                      ^ punctuation.section.block.end.joy -->
+<!--                                                       ^ punctuation.definition.string.end.html -->
+<!--                                                                ^^^^^ variable.function.joy -->
+<!--                                                                     ^^^^^^^^^^^^ meta.function-call.parameters.joy -->
+<!--                                                                                 ^ punctuation.definition.string.end.html -->
+<!--                                                                                  ^ punctuation.definition.tag.end.html -->
+<a href="@href.toHref('x')@if !ro {?id=@id}">y</a>
+<!--     ^^^^^^^^^^^^ variable.function.joy -->
+<!--                      ^^^ keyword.control.conditional.joy -->
+<!--                                   ^^^ variable.other.joy -->
+<!--                                      ^ punctuation.section.block.end.joy -->
+<!--                                       ^ punctuation.definition.string.end.html -->
+<p>end</p>
+<!-- <- meta.tag - meta.attribute -->
+
+@import $ from 'jquery'
+<!--    ^ variable.other.joy -->
+@$el.html
+<!-- <- variable.other.joy -->
+
+<a title="x @data.foo y" class="@if a.b {c @d}" href="@fn(e)">@data.bar</a>
+<!--      ^^ string.quoted.double.html -->
+<!--        ^ punctuation.definition.variable.joy -->
+<!--         ^^^^^^^^ variable.other.joy -->
+<!--                 ^^ string.quoted.double.html -->
+<!--                                ^^^ variable.other.joy -->
+<!--                                     ^ string.quoted.double.html -->
+<!--                                       ^^ variable.other.joy -->
+<!--                                                  ^^^ variable.function.joy -->
+<!--                                                      ^ meta.function-call.parameters.joy variable.other.joy -->
+<!--                                                          ^ punctuation.definition.variable.joy -->
+
+<svg><defs>
+    <@if a {linearGradient} else {radialGradient} id="g">
+<!-- ^^^ keyword.control.conditional.joy -->
+<!--       ^ punctuation.section.block.begin.joy -->
+<!--                      ^ punctuation.section.block.end.joy -->
+<!--                        ^^^^ keyword.control.conditional.joy -->
+<!--                                            ^ punctuation.section.block.end.joy -->
+        <stop stop-color="@c">@if b {<animate values="@v" />}</stop>
+<!--                      ^^ variable.other.joy -->
+<!--                          ^^^ keyword.control.conditional.joy -->
+<!--                                                  ^^ variable.other.joy -->
+<!--                                                        ^ punctuation.section.block.end.joy -->
+    </defs></svg>
+<p>end</p>
+<!-- <- meta.tag - meta.element -->
